@@ -1,0 +1,4 @@
+Name (string)="Complex Config Name" # Comment 
+variable.source (int)=2323
+# Some comment
+something.else (int)=$variable.source
