@@ -31,8 +31,8 @@ func executeTemplate(templ string, funcMap template.FuncMap, data interface{}) (
 }
 
 func TestLookup(t *testing.T) {
-	templ := "{{ range ipv6lookup .host }}{{ . }} {{end}}"
-	td := map[string]interface{}{"host": "google.com"}
+	templ := "{{ ipv4addr \"+30\" .host }}"
+	td := map[string]interface{}{"host": "192.168.0.5/24"}
 	out, err := executeTemplate(templ, FuncMap, td)
 	if err != nil {
 		t.Fatalf("Execute: %s", err)

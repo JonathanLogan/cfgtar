@@ -3,9 +3,11 @@ package tmpfunc
 import (
 	"errors"
 	"io/ioutil"
+	"math/big"
 	"net"
 	"os"
 	"strconv"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -25,31 +27,104 @@ var FuncMap = template.FuncMap{
 	"ipv4lookup":  ipv4lookup,
 	"ipv6lookup":  ipv6lookup,
 	"dnsTXT":      dnsTXT,
+	"ipv4addrRel": ipv4addrRel,
+	"ipv6addrRel": ipv6addrRel,
 }
 
-func asIP(ver int, s string) (string, error) {
-	ip, _, err := net.ParseCIDR(s)
+func netBoundaries(ip net.IP, mask net.IPMask) (first, last net.IP) {
+	if isIPv4(ip) {
+		ip = ip.To4()
+	} else if isIPv6(ip) {
+		ip = ip.To16()
+	}
+	first, last = make(net.IP, len(ip)), make(net.IP, len(ip))
+	for i := len(ip) - 1; i >= 0; i-- {
+		first[i] = ip[i] & mask[i]
+	}
+	for i := len(ip) - 1; i >= 0; i-- {
+		last[i] = ip[i] | ^mask[i]
+	}
+	return first, last
+}
+
+func asIP(ver int, s, boundary string) (string, error) {
+	ip, ipnet, err := net.ParseCIDR(s)
 	if err != nil {
 		return "", err
 	}
 	if ip == nil {
 		return "", errors.New("not an IP address")
 	}
-	if ver == 4 && !isIPv4(ip) {
-		return "", errors.New("not ipv4")
+	if ver == 4 {
+		if !isIPv4(ip) {
+			return "", errors.New("not ipv4")
+		}
+		ip = ip.To4()
 	}
-	if ver == 6 && !isIPv6(ip) {
-		return "", errors.New("not ipv4")
+	if ver == 6 {
+		if !isIPv6(ip) {
+			return "", errors.New("not ipv4")
+		}
+		ip = ip.To16()
 	}
-	return ip.String(), nil
+	first, last := netBoundaries(ip, ipnet.Mask)
+	switch strings.ToLower(boundary) {
+	case "0", "first", "+0", "+first":
+		return first.String(), nil
+	case "last", "+last":
+		return last.String(), nil
+	case "", "current", "cur", "+", "+current", "+cur":
+		return ip.String(), nil
+	default:
+		if len(boundary) == 0 {
+			return "", errors.New("Invalid index")
+		}
+		var startI *big.Int
+		if boundary[0] == '+' {
+			startI = new(big.Int).SetBytes(ip)
+			boundary = boundary[1:]
+		} else {
+			startI = new(big.Int).SetBytes(first)
+		}
+		pos, err := strconv.ParseUint(boundary, 10, 64)
+		if err != nil {
+			return "", err
+		}
+		lastI := new(big.Int).SetBytes(last)
+		posI := new(big.Int).Add(startI, new(big.Int).SetInt64(int64(pos)))
+		if posI.Cmp(lastI) > 0 {
+			return "", errors.New("Out of range")
+		}
+		return net.IP(posI.Bytes()).String(), nil
+	}
 }
 
-func ipv4addr(s string) (string, error) {
-	return asIP(4, s)
+func ipv4addr(s ...string) (string, error) {
+	if len(s) > 1 {
+		return asIP(4, s[1], s[0])
+	}
+	return asIP(4, s[0], "cur")
 }
 
-func ipv6addr(s string) (string, error) {
-	return asIP(6, s)
+func ipv6addr(s ...string) (string, error) {
+	if len(s) > 1 {
+		return asIP(6, s[1], s[0])
+	}
+	return asIP(6, s[0], "cur")
+}
+
+func ipv4addrRel(s ...string) (string, error) {
+	if len(s) > 1 {
+		return asIP(4, s[1], "+"+s[0])
+	}
+	return asIP(4, s[0], "cur")
+}
+
+func ipv6addrRel(s ...string) (string, error) {
+	if len(s) > 1 {
+		return asIP(6, s[1], "+"+s[0])
+	}
+	return asIP(6, s[0], "cur")
 }
 
 func isIPv4(ip net.IP) bool {
