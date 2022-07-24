@@ -19,8 +19,12 @@ const (
 )
 
 func TarPipe(input io.Reader, output io.Writer, reg *schemareg.Registry) error {
-	r := tar.NewReader(input)
-	w := tar.NewWriter(output)
+	var r *tar.Reader
+	var w *tar.Writer
+	r = tar.NewReader(input)
+	if output != nil {
+		w = tar.NewWriter(output)
+	}
 	for {
 		header, err := r.Next()
 		if err != nil {
@@ -58,19 +62,23 @@ func TarPipe(input io.Reader, output io.Writer, reg *schemareg.Registry) error {
 		if err := temp.Execute(buf, data); err != nil {
 			return err
 		}
-		header.Size = int64(buf.Len())
-		if err := w.WriteHeader(header); err != nil {
-			return err
-		}
-		if _, err := io.Copy(w, buf); err != nil {
-			return err
-		}
-		if err := w.Flush(); err != nil {
-			return err
+		if w != nil {
+			header.Size = int64(buf.Len())
+			if err := w.WriteHeader(header); err != nil {
+				return err
+			}
+			if _, err := io.Copy(w, buf); err != nil {
+				return err
+			}
+			if err := w.Flush(); err != nil {
+				return err
+			}
 		}
 	}
-	if err := w.Close(); err != nil {
-		return err
+	if w != nil {
+		if err := w.Close(); err != nil {
+			return err
+		}
 	}
 	return nil
 }

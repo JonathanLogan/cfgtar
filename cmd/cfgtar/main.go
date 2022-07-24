@@ -2,15 +2,76 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/JonathanLogan/cfgtar/pkg/jsonschema"
 	"github.com/JonathanLogan/cfgtar/pkg/schemareg"
 	"github.com/JonathanLogan/cfgtar/pkg/tarpipe"
+	"io"
 	"io/ioutil"
 	"os"
 )
 
 // cat template.tar | cfgtar config | tar -x -C /
+
+var (
+	flagDryRun      bool
+	flagValidateRun bool
+	inputFile       string
+	inputFd         *os.File
+	configFile      string
+	schemaFile      string
+	configData      interface{}
+	schemaData      interface{}
+)
+
+func init() {
+	flag.BoolVar(&flagDryRun, "d", false, "dry run (no output)")
+	flag.BoolVar(&flagValidateRun, "v", false, "validate before generating output, requires input file")
+	flag.StringVar(&inputFile, "i", "", "Input tarfile")
+}
+
+func params() {
+	var err error
+	flag.Parse()
+	if flagValidateRun && len(inputFile) == 0 {
+		printError(1, "%s: -v implies -i", os.Args[0])
+	}
+	args := flag.Args()
+	switch len(args) {
+	case 1:
+		configFile = args[0]
+	case 2:
+		configFile = args[1]
+		schemaFile = args[0]
+	default:
+		printError(1, "%s [<schema.json>] <config.json>", os.Args[0])
+	}
+	if configData, err = parseJsonFile(configFile); err != nil {
+		printError(2, "%s: %s\n", configFile, err)
+	}
+	if schemaFile != "" {
+		if schemaData, err = parseJsonFile(schemaFile); err != nil {
+			printError(3, "%s: %s\n", schemaFile, err)
+		}
+		errPath, _, err := jsonschema.Validate(schemaData, configData)
+		if err != nil {
+			printError(4, "Schema validation: %v %s\n", errPath, err)
+		}
+	}
+	if inputFile != "" {
+		if inputFd, err = os.Open(inputFile); err != nil {
+			printError(5, "%s: %s\n", inputFile, err)
+		}
+	} else {
+		inputFd = os.Stdin
+	}
+}
+
+func printError(exitCode int, format string, v ...interface{}) {
+	_, _ = fmt.Fprintf(os.Stderr, format+"\n", v...)
+	os.Exit(exitCode)
+}
 
 func parseJsonFile(filename string) (interface{}, error) {
 	var ret interface{}
@@ -25,33 +86,21 @@ func parseJsonFile(filename string) (interface{}, error) {
 }
 
 func main() {
-	var err error
-	var config, schema interface{}
-	if len(os.Args) < 2 || len(os.Args) > 3 {
-		_, _ = fmt.Fprintf(os.Stderr, "%s [<schema.json>] <config.json>\n", os.Args[0])
-		os.Exit(1)
-	}
-	if config, err = parseJsonFile(os.Args[1]); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "%s: %s\n", os.Args[1], err)
-		os.Exit(2)
-	}
-	if len(os.Args) == 3 {
-		schema = config
-		if config, err = parseJsonFile(os.Args[2]); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "%s: %s\n", os.Args[1], err)
-			os.Exit(2)
-		}
-		errPath, _, err := jsonschema.Validate(schema, config)
-		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "Schema validation: %v %s\n", errPath, err)
-			os.Exit(3)
-		}
-	}
+	params()
 
-	if err := tarpipe.TarPipe(os.Stdin, os.Stdout, schemareg.New(config)); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
-		os.Exit(4)
+	if flagDryRun || flagValidateRun {
+		if err := tarpipe.TarPipe(inputFd, nil, schemareg.New(configData)); err != nil {
+			printError(6, "%s\n", err)
+		}
+		if _, err := inputFd.Seek(io.SeekStart, 0); err != nil {
+			printError(7, "%s\n", err)
+		}
 	}
-	_ = os.Stdout.Sync()
-	_ = os.Stdout.Close()
+	if !flagDryRun || flagValidateRun {
+		if err := tarpipe.TarPipe(inputFd, os.Stdout, schemareg.New(configData)); err != nil {
+			printError(20, "%s\n", err)
+		}
+		_ = os.Stdout.Sync()
+		_ = os.Stdout.Close()
+	}
 }
