@@ -1,0 +1,4 @@
+{
+	"Name%required":"string,required",
+	"Hostname%required":"string,required"
+}
