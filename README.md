@@ -29,23 +29,21 @@ Schema files are json files that define the structure and types of valid config.
 validation parameters.
 
 Validation happens on the value level, currently supported are:
-  - required: This value must exist. Default.
-  - optional: This value may exist.
   - string: Must be a string.
   - int: Must be an int.
   - float: Must be a float.
   - ...more to come.
 
-Furthermore keys can be marked as required by adding "%required" to the key name.
+Furthermore keys can be marked as required by adding "%required" to the key name or value.
 
 ```json
 {
   "key%required": [
-    "int,required"
+    "int%required"
   ],
   "key1": {
-    "key2": "int,required",
-    "key3": "string,optional"
+    "key2": "int%required",
+    "key3": "string"
   }
 }
 ```

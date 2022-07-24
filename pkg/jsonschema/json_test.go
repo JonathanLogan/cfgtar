@@ -34,16 +34,16 @@ var tdData = `
 
 var tdSchema = `
 {
-"hostname%required" : "required,string",
+"hostname%required" : "string%required",
 "messaging%required": {
-		"cluster":"required,string",
-		"network":"required,string"
+		"cluster":"string%required",
+		"network":"string%required"
 	},
 "network%required" : [
 		{
-			"nic":"required,string",
-			"ipv4":"required,string",
-			"gateway":"required,string"
+			"nic":"string%required",
+			"ipv4":"string%required",
+			"gateway":"string%required"
 		}
 	],
 "disks%required":[

@@ -18,18 +18,7 @@ func validationData(s interface{}) (valFunc ValidatorFunc, required bool, err er
 	if q, ok = s.(string); !ok {
 		return nil, true, ErrSchemaDefType
 	}
-	f := strings.Split(q, ",")
-	for _, n := range f {
-		n := strings.ToLower(trimString(n))
-		switch n {
-		case requiredStr:
-			required = true
-		case optionalStr:
-			required = false
-		default:
-			funcName = n
-		}
-	}
+	funcName, required = nameRequired(q)
 	if funcName == "" {
 		funcName = defaultType
 	}
