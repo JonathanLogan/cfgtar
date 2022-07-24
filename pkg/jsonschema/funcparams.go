@@ -15,12 +15,6 @@ func (params ParamMap) AsFloat(key string) (float64, bool, error) {
 		if e == nil {
 			return 0, true, nil
 		}
-		if eI, ok := e.(float64); ok {
-			return eI, true, nil
-		}
-		if eI, ok := e.(float32); ok {
-			return float64(eI), true, nil
-		}
 		if eI, ok := e.(string); ok {
 			eX, err := strconv.ParseFloat(eI, 64)
 			if err != nil {
@@ -32,7 +26,7 @@ func (params ParamMap) AsFloat(key string) (float64, bool, error) {
 	}
 	return 0, false, nil
 }
-func (params ParamMap) AsInt(key string) (int, bool, error) {
+func (params ParamMap) AsInt(key string) (int64, bool, error) {
 	if params == nil {
 		return 0, false, nil
 	}
@@ -40,15 +34,12 @@ func (params ParamMap) AsInt(key string) (int, bool, error) {
 		if e == nil {
 			return 0, true, nil
 		}
-		if eI, ok := e.(int); ok {
-			return eI, true, nil
-		}
 		if eI, ok := e.(string); ok {
 			eX, err := strconv.ParseInt(eI, 10, 32)
 			if err != nil {
 				return 0, false, err
 			}
-			return int(eX), true, nil
+			return eX, true, nil
 		}
 		return 0, true, ErrParamType
 	}

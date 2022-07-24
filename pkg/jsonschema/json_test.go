@@ -7,19 +7,19 @@ import (
 
 var tdData = `
 {
-"hostname" : "aristotle",
+"hostname" : "lazar",
 "messaging": {
-		"cluster":"de001",
+		"cluster":"google.com",
 		"network":"mainnet"
 	},
 "network" : [
 		{
-			"nic":"eth0",
+			"nic":"enp36s0",
 			"ipv4":"192.168.1.2/24",
 			"gateway":"192.168.1.1"
 		},
 		{
-			"nic":"eth1",
+			"nic":"lo",
 			"ipv4":"192.168.2.2/24",
 			"gateway":"192.168.2.1"
 		}
@@ -34,16 +34,16 @@ var tdData = `
 
 var tdSchema = `
 {
-"hostname%required" : "string%required",
+"hostname%required" : "hostname%required",
 "messaging%required": {
-		"cluster":"string%required",
+		"cluster":"lookup4%required",
 		"network":"string%required"
 	},
 "network%required" : [
 		{
-			"nic":"string%required",
-			"ipv4":"string%required",
-			"gateway":"string%required"
+			"nic":"nic4%required",
+			"ipv4":"ipv4net%required",
+			"gateway":"ipv4%required"
 		}
 	],
 "disks%required":[
