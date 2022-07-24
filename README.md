@@ -1,41 +1,51 @@
 # cfgtar
-Configuration templates in TAR files.
 
-Usage: `cat template.tar | cfgtag configfile > compiled.tar`
+Read templates from tarfile, apply configuration data, output new tar file.
+  - Supports schema validation
+  - Supports lookup functions
+  - Dry & Pre-validation runs (optional)
 
-The purpose of cfgtar is to create a set of local configuration files from a global template that is enriched with
-local configuration settings.
+For generating configuration file trees from global templates and local configuration settings.
 
-## Configfile format
+Usage: `cat template.tar | cfgtag config.json > compiled.tar`\
+Apply config.json to template.tar. Uses embedded schema only.
 
-`name (type)=value`
+Usage: `cat template.tar | cfgtag schema.json config.json > compiled.tar`\
+Apply additional schema.json.
 
-Name is a hierarchy supporting "." dot separation (`level1.level2.name`). Arrays are supported as well (`level1.level2[1].name`).
+Usage: `cat template.tar | cfgtag -d schema.json config.json`\
+Dry run - do not produce output except for errors.
 
-Type is extendable type enforcement, currently supported: string, int.
+Usage: `cfgtag -v -i template.tar schema.json config.json > compiled.tar`\
+Pre-validation run - first check for errors, then produce output. Additional schema is optional.
 
-Value is a string value (to be converted to type), which can optionally be quoted (`="value"`) and supports backslash escaping (`="value\"value"`).
+## Schema
 
-Value can also be a variable name `$level1.level2.name` which refers to a previously defined name=value pair.
+Unless a schema.json is given on the commandline, only embedded ._config-schema.json files are considered for
+schema validation. Embedded schema files are applied to the directory they are contained in and to subdirectories, unless
+replaced by another embedded schema file.
 
-Comments start with `#`.
+Schema files are json files that define the structure and types of valid config.json files. Instead of data they contain
+validation parameters.
 
-Allows multiline composition:
+Validation happens on the value level, currently supported are:
+  - required: This value must exist. Default.
+  - optional: This value may exist.
+  - string: Must be a string.
+  - int: Must be an int.
+  - float: Must be a float.
+  - ...more to come.
 
+Furthermore keys can be marked as required by adding "%required" to the key name.
+
+```json
+{
+  "key%required": [
+    "int,required"
+  ],
+  "key1": {
+    "key2": "int,required",
+    "key3": "string,optional"
+  }
+}
 ```
-level1.level2.
-.name (type)=value1
-.name2 (type)=value2
-```
-
-is equal to
-
-```
-level1.level2.name (type)=value1
-level1.level2.name2 (type)=value2
-```
-
-## Template format
-
-Each file contained in the input tar stream is considered a go text/template. The configfile will be applied to that
-template and the result written to the output stream with all other tar parameters left untouched.
