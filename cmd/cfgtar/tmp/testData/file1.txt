@@ -1,1 +1,1 @@
-Config file Complex Config Name or else
+Config file ThisIsMyName or else

@@ -18,10 +18,9 @@ const (
 	SchemaFileName = "._config-schema.json"
 )
 
-func TarPipe(input io.Reader, output io.Writer, data interface{}) error {
+func TarPipe(input io.Reader, output io.Writer, reg *schemareg.Registry) error {
 	r := tar.NewReader(input)
 	w := tar.NewWriter(output)
-	reg := schemareg.New(data)
 	for {
 		header, err := r.Next()
 		if err != nil {
@@ -48,13 +47,14 @@ func TarPipe(input io.Reader, output io.Writer, data interface{}) error {
 			reg.Add(strings.Split(path.Dir(header.Name), string(os.PathSeparator)), newData)
 			continue
 		}
-		data = reg.Get(strings.Split(path.Dir(header.Name), string(os.PathSeparator)))
+		data := reg.Get(strings.Split(path.Dir(header.Name), string(os.PathSeparator)))
 
 		temp, errT := template.New("").Parse(tempData.String())
 		if errT != nil {
 			return errT
 		}
 		buf := new(bytes.Buffer)
+		temp.Option("missingkey=error")
 		if err := temp.Execute(buf, data); err != nil {
 			return err
 		}

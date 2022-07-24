@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/JonathanLogan/cfgtar/pkg/jsonschema"
+	"github.com/JonathanLogan/cfgtar/pkg/schemareg"
 	"github.com/JonathanLogan/cfgtar/pkg/tarpipe"
 	"io/ioutil"
 	"os"
@@ -34,26 +36,43 @@ import (
 //	_ = os.Stdout.Close()
 //}
 
+func parseJsonFile(filename string) (interface{}, error) {
+	var ret interface{}
+	d, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(d, &ret); err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+
 func main() {
-	var config interface{}
-	if len(os.Args) != 2 {
-		_, _ = fmt.Fprintf(os.Stderr, "%s: Requires config file argument\n", os.Args[0])
+	var err error
+	var config, schema interface{}
+	if len(os.Args) < 2 || len(os.Args) > 3 {
+		_, _ = fmt.Fprintf(os.Stderr, "%s [<schema.json>] <config.json>\n", os.Args[0])
 		os.Exit(1)
 	}
-	d, err := ioutil.ReadFile(os.Args[1])
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "Cannot open config file (%s): %s\n", os.Args[1], err)
+	if config, err = parseJsonFile(os.Args[1]); err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "%s: %s\n", os.Args[1], err)
 		os.Exit(2)
 	}
-	if err := json.Unmarshal(d, &config); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "Cannot parse config file (%s): %s\n", os.Args[1], err)
-		os.Exit(2)
+	if len(os.Args) == 3 {
+		schema = config
+		if config, err = parseJsonFile(os.Args[2]); err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "%s: %s\n", os.Args[1], err)
+			os.Exit(2)
+		}
+		errPath, _, err := jsonschema.Validate(schema, config)
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "Schema validation: %v %s\n", errPath, err)
+			os.Exit(3)
+		}
 	}
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
-		os.Exit(3)
-	}
-	if err := tarpipe.TarPipe(os.Stdin, os.Stdout, config); err != nil {
+
+	if err := tarpipe.TarPipe(os.Stdin, os.Stdout, schemareg.New(config)); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(4)
 	}

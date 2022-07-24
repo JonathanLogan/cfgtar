@@ -2,5 +2,9 @@
 	"Name": "ThisIsMyName",
 	"something":{
 		"else":"SomeOtherData"
+	},
+	"Hostname":"ab.com",
+	"subdir2":{
+		"Network":"internet"
 	}
 }

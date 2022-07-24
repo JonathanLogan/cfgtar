@@ -1,1 +1,1 @@
-Some variable 2323
+Some variable SomeOtherData
