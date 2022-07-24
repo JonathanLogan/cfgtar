@@ -1,1 +1,1 @@
-{"subdir2":{"Network":"string,required"}}
+{"subdir2":{"Network":"string%required"}}

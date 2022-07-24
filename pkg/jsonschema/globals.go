@@ -2,7 +2,7 @@ package jsonschema
 
 import "errors"
 
-type ValidatorFunc func(i any) (interface{}, error)
+type ValidatorFunc func(i ...interface{}) (interface{}, error)
 type ValidatorFuncMap map[string]ValidatorFunc
 
 var (
@@ -13,11 +13,11 @@ var (
 	ErrSchemaType         = errors.New("schema type not matched")
 	ErrSchemaDefType      = errors.New("schema definition is not string")
 	ErrSchemaDefValidator = errors.New("schema definition contains unknown getValidatorFunc type")
+	ErrParamType          = errors.New("parameter type error")
+	ErrParamConstraint    = errors.New("parameter constraint failed")
 )
 
 const (
-	requiredStr    = "required"
-	optionalStr    = "optional"
 	defaultType    = "string"
 	requiredSuffix = "%required"
 )

@@ -1,7 +1,7 @@
 {
-	"Name%required":"string,required",
-	"Hostname%required":"string,required",
+	"Name%required":"string%required",
+	"Hostname%required":"string%required",
 	"something":{
-		"else":"string,required"
+		"else":"string%required"
 	}
 }

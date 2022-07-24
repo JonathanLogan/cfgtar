@@ -55,7 +55,7 @@ var tdSchema = `
 "numbers":[
 		"float"
 	],
-"number": "int"
+"number": "int(min=1)"
 }`
 
 func TestJson(t *testing.T) {

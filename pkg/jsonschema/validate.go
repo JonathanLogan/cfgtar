@@ -22,7 +22,16 @@ func validationData(s interface{}) (valFunc ValidatorFunc, required bool, err er
 	if funcName == "" {
 		funcName = defaultType
 	}
+	funcName, parameters := extractParameters(funcName)
 	if valFunc, ok := validatorFuncMap[funcName]; ok {
+		if parameters != nil && len(parameters) > 0 {
+			return func(i ...any) (interface{}, error) {
+				if len(i) > 0 {
+					return valFunc(i[0], parameters)
+				}
+				return nil, ErrViolationType
+			}, required, nil
+		}
 		return valFunc, required, nil
 	}
 	return nil, true, ErrSchemaDefValidator
