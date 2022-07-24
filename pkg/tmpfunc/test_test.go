@@ -7,14 +7,6 @@ import (
 	"text/template"
 )
 
-/*
-ToDo:
-    - Template
-        - ipv4Addr network pos[first,last,_current_]
-        - ipv6Addr network pos[first,last,_current_]
-
-*/
-
 func executeTemplate(templ string, funcMap template.FuncMap, data interface{}) (string, error) {
 	tmp := template.New("")
 	tmp.Funcs(funcMap)

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/JonathanLogan/cfgtar/pkg/jsonschema"
 	"github.com/JonathanLogan/cfgtar/pkg/schemareg"
+	"github.com/JonathanLogan/cfgtar/pkg/tmpfunc"
 	"io"
 	"os"
 	"path"
@@ -53,12 +54,14 @@ func TarPipe(input io.Reader, output io.Writer, reg *schemareg.Registry) error {
 		}
 		data := reg.Get(strings.Split(path.Dir(header.Name), string(os.PathSeparator)))
 
-		temp, errT := template.New("").Parse(tempData.String())
+		temp := template.New("")
+		temp.Option("missingkey=error")
+		temp.Funcs(tmpfunc.FuncMap)
+		temp, errT := temp.Parse(tempData.String())
 		if errT != nil {
 			return errT
 		}
 		buf := new(bytes.Buffer)
-		temp.Option("missingkey=error")
 		if err := temp.Execute(buf, data); err != nil {
 			return err
 		}
