@@ -21,6 +21,9 @@ var (
 	inputFd         *os.File
 	configFile      string
 	schemaFile      string
+	delim           string
+	delimLeft       string
+	delimRight      string
 	configData      interface{}
 	schemaData      interface{}
 )
@@ -29,6 +32,7 @@ func init() {
 	flag.BoolVar(&flagDryRun, "d", false, "dry run (no output)")
 	flag.BoolVar(&flagValidateRun, "v", false, "validate before generating output, requires input file")
 	flag.StringVar(&inputFile, "i", "", "Input tarfile")
+	flag.StringVar(&delim, "D", "{{}}", "Left|Right delimiter")
 }
 
 func params() {
@@ -66,6 +70,13 @@ func params() {
 	} else {
 		inputFd = os.Stdin
 	}
+	if len(delim) > 0 && len(delim)%2 == 0 {
+		delimLeft = delim[:len(delim)/2]
+		delimRight = delim[len(delim)/2:]
+		fmt.Println(delim[:len(delim)/2], delim[len(delim)/2:])
+	} else {
+		printError(5, "'%s': delimiter must have even length >0.\n", delim)
+	}
 }
 
 func printError(exitCode int, format string, v ...interface{}) {
@@ -89,15 +100,17 @@ func main() {
 	params()
 
 	if flagDryRun || flagValidateRun {
-		if err := tarpipe.TarPipe(inputFd, nil, schemareg.New(configData)); err != nil {
+		if err := tarpipe.TarPipe(inputFd, nil, schemareg.New(configData), delimLeft, delimRight); err != nil {
 			printError(6, "%s\n", err)
 		}
-		if _, err := inputFd.Seek(io.SeekStart, 0); err != nil {
-			printError(7, "%s\n", err)
+		if flagValidateRun {
+			if _, err := inputFd.Seek(io.SeekStart, 0); err != nil {
+				printError(7, "%s\n", err)
+			}
 		}
 	}
 	if !flagDryRun || flagValidateRun {
-		if err := tarpipe.TarPipe(inputFd, os.Stdout, schemareg.New(configData)); err != nil {
+		if err := tarpipe.TarPipe(inputFd, os.Stdout, schemareg.New(configData), delimLeft, delimRight); err != nil {
 			printError(20, "%s\n", err)
 		}
 		_ = os.Stdout.Sync()

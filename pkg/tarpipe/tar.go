@@ -19,7 +19,7 @@ const (
 	SchemaFileName = "._config-schema.json"
 )
 
-func TarPipe(input io.Reader, output io.Writer, reg *schemareg.Registry) error {
+func TarPipe(input io.Reader, output io.Writer, reg *schemareg.Registry, delimLeft, delimRight string) error {
 	var r *tar.Reader
 	var w *tar.Writer
 	r = tar.NewReader(input)
@@ -57,6 +57,7 @@ func TarPipe(input io.Reader, output io.Writer, reg *schemareg.Registry) error {
 		temp := template.New("")
 		temp.Option("missingkey=error")
 		temp.Funcs(tmpfunc.FuncMap)
+		temp = temp.Delims(delimLeft, delimRight)
 		temp, errT := temp.Parse(tempData.String())
 		if errT != nil {
 			return errT
