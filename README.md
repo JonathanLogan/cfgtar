@@ -91,3 +91,16 @@ cfgtar supports changing the template delimiter (`-D LLRR`) and the name of embe
 This allows for generating config templates itself. For example, a repository of universal configuration files can 
 have global settings applied (using a distinct -D and -S), and then used as input to apply local/per-machine settings (using
 the default values for -D and -S).
+
+### Selector mode
+
+cfgtar can be used to create output for multiple targets from a single configuration source.
+
+Selector mode allows setting a "selector" which must be a root-level element of the config input
+that contains an array of strings. cfgtar will iterate over these strings and
+set the selector to an object where "Pos" contains the iteration counter and "Value" the current 
+value. Furthermore the output of each run will be written to its own tar file named `<target>/<selectorvalue>.tar`, 
+target being setable by `-t`.
+
+The standard use case for this mode is to describe a set of servers
+in a single file, and then generate their specific config archives.
