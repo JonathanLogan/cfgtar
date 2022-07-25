@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 // cat template.tar | cfgtar config | tar -x -C /
@@ -36,7 +37,7 @@ func init() {
 	flag.BoolVar(&flagDryRun, "d", false, "dry run (no output)")
 	flag.BoolVar(&flagValidateRun, "v", false, "validate before generating output, requires input file")
 	flag.StringVar(&inputFile, "i", "", "Input tarfile")
-	flag.StringVar(&delim, "D", "{{}}", "Left|Right delimiter")
+	flag.StringVar(&delim, "D", "{{.}}", "Left|Right delimiter")
 	flag.StringVar(&schemaFileName, "S", SchemaFileName, "Name of embedded schema file")
 }
 
@@ -75,12 +76,13 @@ func params() {
 	} else {
 		inputFd = os.Stdin
 	}
-	if len(delim) > 0 && len(delim)%2 == 0 {
-		delimLeft = delim[:len(delim)/2]
-		delimRight = delim[len(delim)/2:]
-		fmt.Println(delim[:len(delim)/2], delim[len(delim)/2:])
-	} else {
-		printError(5, "'%s': delimiter must have even length >0.\n", delim)
+	if len(delim) > 0 {
+		d := strings.Split(delim, ".")
+		if len(d) != 2 || len(d[0]) == 0 || len(d[1]) == 0 {
+			printError(5, "Invalid delimiter '%s'", delim)
+		}
+		delimLeft = d[0]
+		delimRight = d[1]
 	}
 }
 
