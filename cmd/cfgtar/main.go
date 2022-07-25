@@ -13,6 +13,9 @@ import (
 )
 
 // cat template.tar | cfgtar config | tar -x -C /
+const (
+	SchemaFileName = "._config-schema.json"
+)
 
 var (
 	flagDryRun      bool
@@ -24,6 +27,7 @@ var (
 	delim           string
 	delimLeft       string
 	delimRight      string
+	schemaFileName  string
 	configData      interface{}
 	schemaData      interface{}
 )
@@ -33,6 +37,7 @@ func init() {
 	flag.BoolVar(&flagValidateRun, "v", false, "validate before generating output, requires input file")
 	flag.StringVar(&inputFile, "i", "", "Input tarfile")
 	flag.StringVar(&delim, "D", "{{}}", "Left|Right delimiter")
+	flag.StringVar(&schemaFileName, "S", SchemaFileName, "Name of embedded schema file")
 }
 
 func params() {
@@ -100,7 +105,10 @@ func main() {
 	params()
 
 	if flagDryRun || flagValidateRun {
-		if err := tarpipe.TarPipe(inputFd, nil, schemareg.New(configData), delimLeft, delimRight); err != nil {
+		if err := tarpipe.TarPipe(inputFd, nil,
+			schemareg.New(configData),
+			delimLeft, delimRight,
+			schemaFileName); err != nil {
 			printError(6, "%s\n", err)
 		}
 		if flagValidateRun {
@@ -110,7 +118,10 @@ func main() {
 		}
 	}
 	if !flagDryRun || flagValidateRun {
-		if err := tarpipe.TarPipe(inputFd, os.Stdout, schemareg.New(configData), delimLeft, delimRight); err != nil {
+		if err := tarpipe.TarPipe(inputFd, os.Stdout,
+			schemareg.New(configData),
+			delimLeft, delimRight,
+			schemaFileName); err != nil {
 			printError(20, "%s\n", err)
 		}
 		_ = os.Stdout.Sync()

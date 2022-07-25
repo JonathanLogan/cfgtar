@@ -15,11 +15,7 @@ import (
 	"text/template"
 )
 
-const (
-	SchemaFileName = "._config-schema.json"
-)
-
-func TarPipe(input io.Reader, output io.Writer, reg *schemareg.Registry, delimLeft, delimRight string) error {
+func TarPipe(input io.Reader, output io.Writer, reg *schemareg.Registry, delimLeft, delimRight, schemaFileName string) error {
 	var r *tar.Reader
 	var w *tar.Writer
 	r = tar.NewReader(input)
@@ -39,7 +35,7 @@ func TarPipe(input io.Reader, output io.Writer, reg *schemareg.Registry, delimLe
 			return err
 		}
 
-		if header.Typeflag == tar.TypeReg && path.Base(header.Name) == SchemaFileName {
+		if header.Typeflag == tar.TypeReg && path.Base(header.Name) == schemaFileName {
 			var schema, newData interface{}
 			var pErr []string
 			var err error

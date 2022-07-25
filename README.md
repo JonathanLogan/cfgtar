@@ -83,3 +83,11 @@ Input templates are [go text/template](https://pkg.go.dev/text/template). Additi
   - ipv4lookup hostname: Lookup IP addresses of hostname. IPv4 version.
   - ipv6lookup hostname: Lookup IP addresses of hostname. IPv6 version.
   - dnsTXT name: Lookupt TXT records for name.
+
+## Meta generation
+
+cfgtar supports changing the template delimiter (`-D LLRR`) and the name of embedded schema files (`-S <name>`).
+
+This allows for generating config templates itself. For example, a repository of universal configuration files can 
+have global settings applied (using a distinct -D and -S), and then used as input to apply local/per-machine settings (using
+the default values for -D and -S).
