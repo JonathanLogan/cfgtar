@@ -66,7 +66,7 @@ Furthermore keys can be marked as required by adding "%required" to the key name
 
 ## Template
 
-Input templates are go text/template. Additional functions are provided:
+Input templates are [go text/template](https://pkg.go.dev/text/template). Additional functions are provided:
   - durationAs [<h/m/s>] dur: Format duration as hour/minute/second (default).
   - file (get content)
   - hostname: Returns the hostname of the local machine.
@@ -76,10 +76,10 @@ Input templates are go text/template. Additional functions are provided:
   - ipv6Mask network: Return the netmask for network. IPv6 version.
   - ipv4NICAddr nic: Returns list of ipv4 addresses of network interface nic. 
   - ipv6NICAddr nic: Returns list of ipv6 addresses of network interface nic.
-  - ipv4addr [<last/first/current/<offset>/+<offset>] addr/net: Return IP address. IPv4 version.
-  - ipv6addr [<last/first/current/<offset>/+<offset>] addr/net: Return IP address. IPv6 version.
-  - ipv4addrRel [<last/first/current/<offset>] addr/net: Return IP address. IPv4 version. From offset from current.
-  - ipv6addrRel [<last/first/current/<offset>] addr/net: Return IP address. IPv6 version. From offset from current.
+  - ipv4addr [<last/first/current/\<offset>/+\<offset>] addr/net: Return IP address. IPv4 version.
+  - ipv6addr [<last/first/current/\<offset>/+\<offset>] addr/net: Return IP address. IPv6 version.
+  - ipv4addrRel [<last/first/current/\<offset>] addr/net: Return IP address. IPv4 version. From offset from current.
+  - ipv6addrRel [<last/first/current/\<offset>] addr/net: Return IP address. IPv6 version. From offset from current.
   - ipv4lookup hostname: Lookup IP addresses of hostname. IPv4 version.
   - ipv6lookup hostname: Lookup IP addresses of hostname. IPv6 version.
   - dnsTXT name: Lookupt TXT records for name.
